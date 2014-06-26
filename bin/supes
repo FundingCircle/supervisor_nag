@@ -16,16 +16,17 @@ end.parse!
 exit 4 if app.nil?
 
 downs = []
-SupervisorNag::Parser.parse(app).select{ |a| a.state != :running }.each do |app|
-  downs << app
+begin
+  SupervisorNag::Parser.parse(app).select{ |a| a.state != :running }.each do |app|
+    downs << app
+  end
+rescue DaFuq
+  puts "Nothing matching /#{app}/ found"
+  exit 4
 end
 
 if downs.empty?
-  if app.nil?
-    puts "supervisor workers working"
-  else
-    puts "#{app} worker is working"
-  end
+  puts "#{app} worker is working"
   exit 0
 end
 
