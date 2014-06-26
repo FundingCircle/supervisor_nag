@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+#-*- mode ruby -*-
+
+$LOAD_PATH.push File.join(File.dirname(__FILE__), '..', 'lib')
+
+require 'supervisor_nag'
+
+require 'optparse'
+
+app = nil
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{$0} [options]"
+  opts.on("-a", "--application APPLICATION")  { |a| application = a.to_s }
+end.parse!
+
+downs = []
+SupervisorNag::Parser.parse(app).select{ |a| a.state != :running }.each do |app|
+  downs << app
+end
+
+if downs.empty?
+  if app.nil?
+    puts "supervisor workers working"
+  else
+    puts "#{app} worker is working"
+  end
+  exit 0
+end
+
+puts "Errors in supervisor:"
+downs.each do |app|
+  puts "#{app.name} has been in state #{app.state} since #{app.since}"
+end
+exit 2
