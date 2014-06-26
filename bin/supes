@@ -8,11 +8,12 @@ require 'supervisor_nag'
 require 'optparse'
 
 app = nil
-
 OptionParser.new do |opts|
   opts.banner = "Usage: #{$0} [options]"
-  opts.on("-a", "--application APPLICATION")  { |a| application = a.to_s }
+  opts.on("-a", "--application APPLICATION")  { |a| app = a.to_s }
 end.parse!
+
+exit 4 if app.nil?
 
 downs = []
 SupervisorNag::Parser.parse(app).select{ |a| a.state != :running }.each do |app|
