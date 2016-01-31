@@ -1,25 +1,44 @@
+require 'open3'
+require 'supervisor_nag'
+
 module SupervisorNag
-  class DaFuq < RuntimeError; end
+  CommandExecutionError = Class.new(RuntimeError)
+  NoActiveApplicationsError = Class.new(RuntimeError)
 
   module Parser
     def self.parse app
-      supervisorctl = `supervisorctl status`
       apps = nil
 
-      supervisorctl.split("\n").each do |line|
-        line_arr = line.strip.split
+      output.split("\n").each do |line|
+        l = parse_line(line)
 
-        name = line_arr[0]
-        next unless name =~ /#{app}/
+        next unless l.name =~ /#{app}/
 
-        state = line_arr[1]
-        since = line_arr[1] == 'STOPPED' ? line_arr[2..-1].join(' ') : line_arr[5..-1].join(' ')
+        since = if l.status == 'STOPPED'
+                  [l.pid_title, l.pid, l.uptime_title, l.uptime].join(' ')
+                else
+                  l.uptime
+                end
 
         apps = [] if apps.nil?
-        apps << SupervisorNag::Application.new(name, state, since)
+        apps << SupervisorNag::Application.new(l.name, l.status, since)
       end
-      raise DaFuq if apps.nil?
+      raise NoActiveApplicationsError if apps.nil?
       return apps
-   end
+    end
+
+    class << self
+      private
+
+      def parse_line line
+        Struct.new(:name, :status, :pid_title, :pid, :uptime_title, :uptime).new(*line.strip.split)
+      end
+
+      def output
+        Open3.capture3('supervisorctl',  :stdin_data => 'status').tap do |out, err, status|
+          raise CommandExecutionError, err unless status.success?
+        end.first
+      end
+    end
   end
 end

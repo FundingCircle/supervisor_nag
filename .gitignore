@@ -1,6 +1,7 @@
-.vagrant
-.ruby-version
-.ruby-gemset
-tmp
-*~
 *#
+*~
+.ruby-gemset
+.ruby-version
+.vagrant
+spec/examples.txt
+tmp

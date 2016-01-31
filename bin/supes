@@ -20,7 +20,7 @@ begin
   SupervisorNag::Parser.parse(app).select{ |a| a.state != :running }.each do |app|
     downs << app
   end
-rescue SupervisorNag::DaFuq
+rescue SupervisorNag::CommandExecutionError
   puts "Nothing matching /#{app}/ found"
   exit 4
 end
