@@ -1,2 +1,7 @@
 source 'https://rubygems.org'
-gem 'resque', github: 'resque/resque'
+
+gem 'resque'
+
+group :development, :test do
+  gem 'rspec'
+end
